@@ -6,7 +6,7 @@ on:
         type: choice
         description: "分支"
         required: true
-        default: sm8550
+        default: sm8750
         options:
           - sm7550
           - sm7675
@@ -19,7 +19,7 @@ on:
         type: choice
         description: "配置文件"
         required: true
-        default: oneplus_ace2pro_v
+        default: oneplus_13
         options:
           - oneplus_nord_ce4_v
           - oneplus_ace_3v_v
@@ -47,7 +47,7 @@ on:
         type: choice
         description: "处理器代号"
         required: true
-        default: kalama
+        default: sun
         options:
           - crow
           - waipio
@@ -58,7 +58,7 @@ on:
         type: choice
         description: "内核安卓版本"
         required: true
-        default: android13
+        default: android15
         options:
           - android12
           - android13
@@ -68,7 +68,7 @@ on:
        type: choice
        description: "内核版本"
        required: true
-       default: "5.15"
+       default: "6.6"
        options:
          - "5.10"
          - "5.15"
@@ -78,7 +78,7 @@ on:
         type: choice
         description: "编译方式"
         required: true
-        default: gki
+        default: perf
         options:
           - gki
           - perf
@@ -152,7 +152,7 @@ jobs:
         run: |
           mkdir kernel_workspace && cd kernel_workspace
           repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/${{ github.event.inputs.CPU }} -m ${{ github.event.inputs.FEIL }}.xml --depth=1
-          repo sync
+          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
           if [  -e kernel_platform/common/BUILD.bazel ]; then
           sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' kernel_platform/common/BUILD.bazel
           fi
@@ -204,6 +204,8 @@ jobs:
           fi
 
           cd ./common
+          sed -i 's/-32,12 +32,38/-32,11 +32,37/g' 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch
+          sed -i '/#include <trace\/hooks\/fs.h>/d' 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch
           patch -p1 < 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch || true
           echo "完成"
 
